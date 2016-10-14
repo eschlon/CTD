@@ -8,8 +8,7 @@ ctd_MainQuest Property QuestAlias Auto
 float Property fMinimumToxicity = 0.05 AutoReadOnly
 
 Spell Property ToxicityEffect Auto
-Keyword Property PotionKW Auto
-Keyword Property NonToxic Auto
+Keyword Property VendorItemPotion Auto
 MagicEffect Property Antidote Auto
 MagicEffect Property CureDisease Auto
 MagicEffect Property AlchCureDisease Auto
@@ -49,6 +48,7 @@ bool bMonitoringToxicity = False
 
 Event OnInit()
 	akPlayer = Game.GetPlayer()
+	AddInventoryEventFilter(VendorItemPotion)
 EndEvent
 
 Event OnPlayerLoadGame()
@@ -68,7 +68,7 @@ bool Function isPotion(Potion akBaseItem)
 	if (!akBaseItem)
 		return False
 	endif
-	if (akBaseItem.HasKeyword(PotionKW) && !akBaseItem.IsFood() && !akBaseItem.HasKeyword(NonToxic))
+	if (akBaseItem.HasKeyword(VendorItemPotion) && !akBaseItem.IsFood())
 		return True
 	endif
 	return False
@@ -152,30 +152,37 @@ Function ApplyIMod()
 	endif
 EndFunction
 
-Form previousItem = None ; Need this  to remove duplicate events
+Form previousItem = None ; Need this to remove duplicate events
 
 Function MonitorToxicity()
 EndFunction
 
-
-int Function GetValue(Form akBaseItem)
-	; Check For Antidote
-	bool isAntidote = False
-	int iNumEffects = (akBaseItem as Potion).GetNumEffects()
+bool Function isToxic(Potion akBaseItem)
+	Debug.trace("Checking toxic status...")
+	int iNumEffects = akBaseItem.getNumEffects()
 	int n = 0
 	while n < iNumEffects
-		if (akBaseItem as Potion).GetNthEffectMagicEffect(n) == Antidote
-			isAntidote = True
+		MagicEffect theEffect = akBaseItem.GetNthEffectMagicEffect(n)
+		if (theEffect == Antidote)
+			Debug.trace("Antidote Detected...")
+			return False
+		elseif (!Config.bCureDiseasePotionsAreToxic && (theEffect == AlchCureDisease || theEffect == CureDisease || theEffect == VigilantCureDisease))
+			return  False
+			Debug.trace("Non-Toxic Cure Disease Detected...")
 		endif
 		n += 1
 	endwhile
 
-	if isAntidote
-		return 0
-	else
-		return akBaseItem.GetGoldValue()
-	endif
+	Debug.trace("Toxic Potion Detected...")
+
+	return True
+endFunction
+
+int Function GetValue(Form akBaseItem)
+	Debug.trace("Getting value of potion")
+	return akBaseItem.GetGoldValue()
 EndFunction
+
 
 State Active
 	Function MonitorToxicity()
@@ -192,11 +199,17 @@ State Active
 			endif
 			previousItem = akBaseItem
 
-			Debug.Notification("Potion Detected...")
+			Debug.trace("Potion Detected...")
 
-			int Value = GetValue(akBaseItem)
-			HandleToxicity(Value as float)
-			QuestAlias.HandleAddiction(Value as float)
+			if (isToxic(akBaseItem as Potion))
+				Debug.trace("Potion is Toxic... Handling")
+				int Value = GetValue(akBaseItem)	
+				HandleToxicity(Value as float)
+				QuestAlias.HandleAddiction(Value as float)
+			endif
+
+			Debug.trace("And we're done...")
+
 		endif
 	EndEvent
 
@@ -214,10 +227,6 @@ State Active
 			QuestAlias.ClearAddiction()
 		endif
 
-		if isPotion(akCaster.getBaseObject() as Potion)
-			Debug.Notification("Potion Effect Detected")
-			Debug.Notification(akCaster + " applied the " + akEffect + " on us")
-		endif
 	EndEvent
 
 	Event OnUpdateGameTime()

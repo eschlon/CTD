@@ -23,6 +23,7 @@ float Property fMeterAlpha = 100.0 Auto Hidden
 float Property fMeterX = 640.0 Auto Hidden
 float Property fMeterY = 700.0 Auto Hidden
 bool Property bShowMessages = True Auto Hidden
+bool Property bCureDiseasePotionsAreToxic = True Auto Hidden
 
 float Property fUpdateInterval = 0.5 AutoReadOnly
 
@@ -56,7 +57,7 @@ Event OnConfigInit()
 	ToggleMeter(False)
 
 	; Creating pages
-	Pages = new string[1]
+	Pages = new string[2]
 	Pages[0] = "General"
 	Pages[1] = "Inventory"
 EndEvent
@@ -92,6 +93,7 @@ Event OnPageReset(string page)
 		AddSliderOptionST("CTD_TOXICITY_MULTIPLIER", "Global Toxicity Multiplier", fToxicityMultiplier, "{1}x")
 		AddSliderOptionST("CTD_TOXICITY_MAXIMUM", "Maximum Potion Toxicity", fToxicityMaximum, "{1}%")
 		AddSliderOptionST("CTD_TOXICITY_DECAY", "Toxicity Decay Half-life", fToxicityDecay * 24.0, "{1} Hours")
+		AddToggleOptionST("CTD_CURE_DISEASE_IS_TOXIC", "Cure Disease Potions are Toxic", bCureDiseasePotionsAreToxic)
 
 		AddHeaderOption("Addiction Settings")
 		AddToggleOptionST("CTD_ADDICTION_TOGGLE", "Enable Alchemical Addiction", bAddictionActive)		
@@ -193,7 +195,6 @@ state CTD_TEXT_TOGGLE
 	endEvent
 endState
 
-
 state CTD_IMOD_TOGGLE
 	event OnSelectST()
 		bIModEnabled = !bIModEnabled
@@ -207,6 +208,22 @@ state CTD_IMOD_TOGGLE
 
 	event OnHighlightST()
 		SetInfoText("Enable or disable the toxicity visual effect.")
+	endEvent
+endState
+
+state CTD_CURE_DISEASE_IS_TOXIC
+	event OnSelectST()
+		bCureDiseasePotionsAreToxic = !bCureDiseasePotionsAreToxic
+		SetToggleOptionValueST(bCureDiseasePotionsAreToxic)		
+	endEvent
+
+	event OnDefaultST()
+		bCureDiseasePotionsAreToxic = True
+		SetToggleOptionValueST(bCureDiseasePotionsAreToxic)	
+	endEvent
+
+	event OnHighlightST()
+		SetInfoText("Toggle toxicity for potions with the Cure Disease effect. If this is set Cure Disease potions will cause Toxicity effects and trigger Addiction chance (meaning if you drink one it might cure your addiction and then immediately cause you to become addicted again... drinking potions to cure potion addiction was never a good plan). Default True.")
 	endEvent
 endState
 
