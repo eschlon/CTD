@@ -164,25 +164,25 @@ bool Function isToxic(Potion akBaseItem)
 	while n < iNumEffects
 		MagicEffect theEffect = akBaseItem.GetNthEffectMagicEffect(n)
 		if (theEffect == Antidote)
-			Debug.trace("Antidote Detected...")
 			return False
 		elseif (!Config.bCureDiseasePotionsAreToxic && (theEffect == AlchCureDisease || theEffect == CureDisease || theEffect == VigilantCureDisease))
 			return  False
-			Debug.trace("Non-Toxic Cure Disease Detected...")
 		endif
 		n += 1
 	endwhile
-
-	Debug.trace("Toxic Potion Detected...")
-
 	return True
 endFunction
 
 int Function GetValue(Form akBaseItem)
-	Debug.trace("Getting value of potion")
 	return akBaseItem.GetGoldValue()
 EndFunction
 
+bool Function isCrafting()
+	if (UI.IsMenuOpen("Crafting Menu"))
+		return True
+	endif
+	return False
+endFunction
 
 State Active
 	Function MonitorToxicity()
@@ -192,24 +192,18 @@ State Active
 	EndFunction
 
 	Event OnItemRemoved(Form akBaseItem, int aiItemCount, ObjectReference akItemReference, ObjectReference akDestContainer)
-		if(!akDestContainer && !akItemReference && isPotion(akBaseItem as Potion))
+		if(!akDestContainer && !akItemReference && isPotion(akBaseItem as Potion) && !isCrafting())
 			if (akBaseItem == previousItem)
 				previousItem = None
 				return
 			endif
 			previousItem = akBaseItem
 
-			Debug.trace("Potion Detected...")
-
 			if (isToxic(akBaseItem as Potion))
-				Debug.trace("Potion is Toxic... Handling")
 				int Value = GetValue(akBaseItem)	
 				HandleToxicity(Value as float)
 				QuestAlias.HandleAddiction(Value as float)
 			endif
-
-			Debug.trace("And we're done...")
-
 		endif
 	EndEvent
 
