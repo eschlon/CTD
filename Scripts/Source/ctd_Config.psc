@@ -132,7 +132,7 @@ Event OnPageReset(string page)
 		int len = asWhitelist.Length
 		while  (i < len)
 			if (asWhitelist[i] != "")
-				aiWhitelist[i] = AddTextOption(asWhitelist[i], "")
+				aiWhitelist[i] = AddTextOption(asWhitelist[i], "Click to Remove")
 			endIf
 			i += 1
 		endWhile
@@ -155,14 +155,16 @@ Function MessageActivation()
 EndFunction
 
 event OnOptionSelect(int option)
+	if (option == oCACO)
+		AddToWhitelist("Poultice")
+		AddToWhitelist("Salve")
+		ForcePageReset()
+	endIf
+
 	int i = aiWhitelist.find(option)
 	if (i >= 0)
 		asWhitelist[i] = ""
-		ForcePageReset()
-	endIf
-	if (i == oCACO)
-		AddToWhitelist("Poultice")
-		AddToWhitelist("Salve")
+		aiWhitelist[i] = 0
 		ForcePageReset()
 	endIf
 endEvent

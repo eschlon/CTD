@@ -48,7 +48,6 @@ bool bMonitoringToxicity = False
 
 Event OnInit()
 	akPlayer = Game.GetPlayer()
-	AddInventoryEventFilter(VendorItemPotion)
 EndEvent
 
 Event OnPlayerLoadGame()
@@ -177,7 +176,6 @@ bool Function isToxic(Potion akBaseItem)
 		debug.trace(Config.asWhitelist[i])
 		debug.trace(name)
 		if (Config.asWhiteList[i] != "" && StringUtil.Find(name, Config.asWhiteList[i]) >= 0)
-			debug.trace("Whitelist Triggered...")
 			return False
 		endif
 		i += 1
@@ -198,6 +196,7 @@ bool Function isCrafting()
 endFunction
 
 State Active
+
 	Function MonitorToxicity()
 		fThen = Utility.GetCurrentGameTime()
 		self.RegisterForUpdateGameTime(Config.fUpdateInterval)
