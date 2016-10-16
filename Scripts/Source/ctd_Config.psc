@@ -24,6 +24,10 @@ float Property fMeterX = 640.0 Auto Hidden
 float Property fMeterY = 700.0 Auto Hidden
 bool Property bShowMessages = True Auto Hidden
 bool Property bCureDiseasePotionsAreToxic = True Auto Hidden
+string[] Property asWhitelist Auto Hidden
+int[] Property aiWhitelist Auto Hidden
+
+int Property oCACO Auto
 
 float Property fUpdateInterval = 0.5 AutoReadOnly
 
@@ -49,7 +53,6 @@ Function ToggleMeter(bool on = False)
 	endif
 EndFunction
 
-
 Event OnConfigInit()
 	{Called when this config menu is initialized}
 	ModName = "Chasing the Dragon"
@@ -59,7 +62,11 @@ Event OnConfigInit()
 	; Creating pages
 	Pages = new string[2]
 	Pages[0] = "General"
-	Pages[1] = "Inventory"
+	Pages[1] = "Whitelist"
+
+	; Creating Initial Whitelist & Options Forms
+	asWhitelist = new string[128]
+	aiWhitelist = new int[128]
 EndEvent
 
 Event OnPlayerLoadGame()
@@ -117,7 +124,22 @@ Event OnPageReset(string page)
 		AddSliderOptionST("CTD_IMOD_MIN", "Effect Start", fIModMin, "{1}%")
 		AddSliderOptionST("CTD_IMOD_MAX", "Effect Max", fIModMax, "{1}%")
 		Return
-	ElseIf (page == "Inventory")
+	ElseIf (page == "Whitelist")
+		SetCursorPosition(0)
+		SetCursorFillMode(TOP_TO_BOTTOM)
+		AddHeaderOption("WhiteListed Terms")
+		int i = 0
+		int len = asWhitelist.Length
+		while  (i < len)
+			if (asWhitelist[i] != "")
+				aiWhitelist[i] = AddTextOption(asWhitelist[i], "")
+			endIf
+			i += 1
+		endWhile
+
+		SetCursorPosition(1)
+		AddInputOptionST("CTD_EXCEPTIONS_ADD", "Add to Whitelist", "")
+		oCACO = AddTextOption("Poultices & Salves", "")
 		Return	
 	EndIf
 EndEvent
@@ -131,6 +153,42 @@ Function MessageActivation()
 		Debug.Notification("Chasing the Dragon is inactive...")
 	endif		
 EndFunction
+
+event OnOptionSelect(int option)
+	int i = aiWhitelist.find(option)
+	if (i >= 0)
+		asWhitelist[i] = ""
+		ForcePageReset()
+	endIf
+	if (i == oCACO)
+		AddToWhitelist("Poultice")
+		AddToWhitelist("Salve")
+		ForcePageReset()
+	endIf
+endEvent
+
+int function AddToWhitelist(string value)
+	int i = asWhitelist.find("")
+	int duplicate = asWhitelist.find(value)
+	if (i >= 0 && duplicate < 0)
+		asWhitelist[i] = value
+	endIf
+	return i
+endFunction
+
+state CTD_EXCEPTIONS_ADD
+	event OnInputOpenST()
+	EndEvent
+
+	event OnInputAcceptST(string a_input)
+		AddToWhitelist(a_input)
+		ForcePageReset()
+	EndEvent
+	
+	event OnHighlightST()
+		SetInfoText("Enter a string to add it to the white list on the right, you can remove strings by clicking on them. Potion items containing these strings will be considered non-toxic.")	
+	EndEvent
+endState
 
 state CTD_ACTIVE_TOGGLE
 	event OnSelectST()

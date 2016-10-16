@@ -158,7 +158,7 @@ Function MonitorToxicity()
 EndFunction
 
 bool Function isToxic(Potion akBaseItem)
-	Debug.trace("Checking toxic status...")
+	Debug.trace(akBaseItem.getName())
 	int iNumEffects = akBaseItem.getNumEffects()
 	int n = 0
 	while n < iNumEffects
@@ -166,10 +166,23 @@ bool Function isToxic(Potion akBaseItem)
 		if (theEffect == Antidote)
 			return False
 		elseif (!Config.bCureDiseasePotionsAreToxic && (theEffect == AlchCureDisease || theEffect == CureDisease || theEffect == VigilantCureDisease))
-			return  False
+			return False
 		endif
 		n += 1
 	endwhile
+	int i = 0
+	int len = Config.asWhiteList.Length
+	string name = akBaseItem.GetName()
+	while (i < len)
+		debug.trace(Config.asWhitelist[i])
+		debug.trace(name)
+		if (Config.asWhiteList[i] != "" && StringUtil.Find(name, Config.asWhiteList[i]) >= 0)
+			debug.trace("Whitelist Triggered...")
+			return False
+		endif
+		i += 1
+	endWhile
+
 	return True
 endFunction
 
